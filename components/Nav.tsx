@@ -29,10 +29,13 @@ export function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="brand">
-        <div className="brand-mark">🌿</div>
+        <div className="brand-mark">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="GreenChain logo" />
+        </div>
         <div>
-          <div className="brand-name">GreenChain <em>AI</em></div>
-          <div className="brand-sub">Farm advisor · Bhutan</div>
+          <div className="brand-name">Green<em>Chain</em></div>
+          <div className="brand-sub">AI farm advisor · Bhutan</div>
         </div>
       </div>
       <Items />
