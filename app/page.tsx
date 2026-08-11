@@ -46,7 +46,7 @@ export default function Home() {
           </Link>
         ))}
       </div>
-      <section className="principle-card"><Sprout aria-hidden="true" /><div><span className="eyebrow">Our approach</span><h2>Advice that explains itself.</h2><p>We show why a crop fits, what information is missing, and when you should ask an extension officer. AI supports your decision—it does not replace local experience or laboratory confirmation.</p></div></section>
+      <section className="principle-card"><Sprout aria-hidden="true" /><div><span className="eyebrow">Our approach</span><h2>Advice that explains itself.</h2><p>We show why a crop fits, what information is missing, and when you should ask an extension officer. AI supports your decision—it does not replace local experience or laboratory confirmation.</p><Link className="go story-link" href="/about">Why GreenChain started <ArrowRight size={18} /></Link></div></section>
     </>
   );
 }

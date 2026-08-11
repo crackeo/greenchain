@@ -1,15 +1,15 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Leaf, ScanLine, Sprout } from "lucide-react";
+import { BookOpenText, Home, Leaf, ScanLine, Sprout } from "lucide-react";
 
 const ITEMS = [
   { href: "/", Icon: Home, label: "Home", short: "Home" },
   { href: "/crops", Icon: Sprout, label: "Crop planner", short: "Crops" },
   { href: "/disease", Icon: ScanLine, label: "Plant doctor", short: "Doctor" },
   { href: "/soil", Icon: Leaf, label: "Soil health", short: "Soil" },
+  { href: "/about", Icon: BookOpenText, label: "Our story", short: "Story" },
 ];
 
 function NavItems({ compact = false }: { compact?: boolean }) {
@@ -35,11 +35,11 @@ export function Sidebar() {
   return (
     <aside className="sidebar">
       <Link href="/" className="brand" aria-label="GreenChain AI home">
-        <Image src="/logo.svg" alt="" width={48} height={48} priority />
-        <div>
-          <div className="brand-name">Green<span>Chain</span></div>
-          <div className="brand-sub">Farm intelligence · Bhutan</div>
-        </div>
+        <span className="brand-logo-crop" aria-hidden="true" />
+        <span>
+          <span className="brand-name">Green<span>Chain</span></span>
+          <span className="brand-sub">Farm intelligence · Bhutan</span>
+        </span>
       </Link>
       <nav className="sidebar-nav" aria-label="Main navigation"><NavItems /></nav>
       <div className="sidebar-foot">

@@ -14,6 +14,7 @@ GreenChain AI is a mobile-first, installable farm advisory application for house
 | Module | Page | API route |
 |---|---|---|
 | Home | `/` | `GET /api/status` |
+| GreenChain story | `/about` | — |
 | Crop planner | `/crops` | `POST /api/crop-recommendation` |
 | Plant doctor | `/disease` | `POST /api/disease-diagnosis` |
 | Soil health | `/soil` | `POST /api/soil-health` |
@@ -43,6 +44,7 @@ All keys stay server-side. Never prefix them with `NEXT_PUBLIC_`, commit `.env.l
 ## Design and safety
 
 - [DESIGN.md](./DESIGN.md) is the UI and experience source of truth.
+- The official brand artwork is served from `public/greenchain.png` and used in the application shell and story page.
 - `CLAUDE.md` contains contributor and safety guidance.
 - AI output is decision support, not laboratory confirmation. Urgent or uncertain plant-health findings should be confirmed through NPPC or a dzongkhag extension office.
 - Source links are displayed when the provider returns them; users should verify pesticide registration, rates, PPE, and pre-harvest intervals locally.

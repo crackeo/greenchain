@@ -45,6 +45,7 @@
 5. Disease results separate immediate action, organic options, regulated chemical options, and expert referral.
 6. AI confidence is visible. Sources are shown when web-grounded information is used.
 7. No emoji as structural icons; use one consistent outlined SVG icon family.
+8. The public story page should explain the mission, journey, present capabilities, technical approach, and roadmap in plain language before introducing implementation detail.
 
 ## Motion
 - **Approach:** Minimal-functional.
@@ -62,3 +63,4 @@
 | 2026-08-12 | Mobile-first dual farmer modes | Household and commercial farms have different planning needs but share the same core intelligence. |
 | 2026-08-12 | Outdoor-light theme | Primary use is in fields and on phones; daylight contrast matters more than fashionable dark UI. |
 | 2026-08-12 | Evidence-forward AI outputs | Agricultural advice must expose uncertainty and sources rather than imply certainty. |
+| 2026-08-12 | Public story page and official PNG brand asset | Give farmers, partners, and the general public one understandable account of why GreenChain exists, what is working, and where it is going. |
