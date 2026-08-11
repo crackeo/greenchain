@@ -1,37 +1,55 @@
-# GreenChain AI — Farm Advisor for Bhutan
+# GreenChain AI — Farm intelligence for Bhutan
 
-Next.js (App Router) + React rebuild of the farm advisory prototype. The backend is
-Next.js API routes calling Claude Opus 4.8; the frontend is a designed app shell
-(sidebar on desktop, bottom nav on mobile) with three modules.
+GreenChain AI is a mobile-first, installable farm advisory application for household and commercial farmers. It combines crop planning, plant-photo diagnosis, soil-health planning, and future IoT sensor ingestion in one Next.js application.
+
+## Farmer experiences
+
+- **Household farm:** food security, mixed cropping, staggered harvests, affordable inputs, and family-manageable steps.
+- **Commercial farm:** acre-based quantities, production scale, labor, seasonal budget, target market, and operational risk.
+- **Plant doctor:** camera-first diagnosis with photo-quality checks, visible confidence/severity, organic-first actions, chemical safety notes, and NPPC/extension referral.
+- **Soil health:** manual NSSC/soil-card values or IoT readings converted into timed amendments and quantities.
+
+## Routes
 
 | Module | Page | API route |
 |---|---|---|
-| Crop selection | `/crops` | `POST /api/crop-recommendation` |
-| Disease check (photo) | `/disease` | `POST /api/disease-diagnosis` |
+| Home | `/` | `GET /api/status` |
+| Crop planner | `/crops` | `POST /api/crop-recommendation` |
+| Plant doctor | `/disease` | `POST /api/disease-diagnosis` |
 | Soil health | `/soil` | `POST /api/soil-health` |
-| IoT sensor ingestion | — | `POST /api/iot/soil-reading` |
+| IoT ingestion | — | `POST /api/iot/soil-reading` |
 
-## Run
+## Run locally
 
 ```sh
-npm install
-# Either key works; if both are set, Claude is preferred:
-echo "ANTHROPIC_API_KEY=sk-ant-..." > .env.local   # Claude Opus 4.8 (best quality)
-echo "GEMINI_API_KEY=AIza..." >> .env.local        # Gemini free tier (Google AI Studio)
-npm run dev        # http://localhost:8720
+npm ci
+cp .env.example .env.local
+# Add at least one real API key to .env.local
+npm run dev
 ```
 
-`GET /api/status` reports which provider/model is active.
+Open `http://localhost:8720`. On a phone connected to the same network, open the Mac's LAN address on port 8720. For a permanent installable phone app, deploy over HTTPS and use **Add to Home Screen**.
 
-## Architecture
+## AI providers
 
-- `lib/claude.ts` — Anthropic client, Bhutan agronomist system prompt (cached),
-  structured-output JSON schemas, in-memory IoT reading store
-- `app/api/*/route.ts` — the four backend endpoints
-- `app/globals.css` — design system (tokens + component classes); Fraunces display
-  serif + Schibsted Grotesk UI type via `next/font`
-- `components/ui.tsx` — shared presentational components (Pill, Loading, Bullets…)
-- `app/{crops,disease,soil}/page.tsx` — feature modules (client components)
+Provider order is:
 
-Design decisions, safety rails, and roadmap: see `../bhutan-agri-ai/README.md`
-(same product decisions; this repo supersedes the Python prototype).
+1. **OpenAI** (`OPENAI_API_KEY`) — uses the Responses API with web search and strict structured output.
+2. **Anthropic** (`ANTHROPIC_API_KEY`) — structured-output agricultural reasoning.
+3. **Google Gemini** (`GEMINI_API_KEY`) — free-tier multimodal fallback.
+
+All keys stay server-side. Never prefix them with `NEXT_PUBLIC_`, commit `.env.local`, or embed them in browser code. Rotate any key that has been pasted into chat or another shared channel.
+
+## Design and safety
+
+- [DESIGN.md](./DESIGN.md) is the UI and experience source of truth.
+- `CLAUDE.md` contains contributor and safety guidance.
+- AI output is decision support, not laboratory confirmation. Urgent or uncertain plant-health findings should be confirmed through NPPC or a dzongkhag extension office.
+- Source links are displayed when the provider returns them; users should verify pesticide registration, rates, PPE, and pre-harvest intervals locally.
+
+## Verify
+
+```sh
+npm run build
+npm audit --omit=dev
+```

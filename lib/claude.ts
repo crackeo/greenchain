@@ -1,14 +1,27 @@
 import Anthropic from "@anthropic-ai/sdk";
 
 import { askGemini, GEMINI_MODEL } from "./gemini";
+import { askOpenAI, OPENAI_MODEL } from "./openai";
 
 export const MODEL = "claude-opus-4-8";
 
-export const activeProvider = (): "anthropic" | "gemini" | null =>
-  process.env.ANTHROPIC_API_KEY ? "anthropic" : process.env.GEMINI_API_KEY ? "gemini" : null;
+export const activeProvider = (): "openai" | "anthropic" | "gemini" | null =>
+  process.env.OPENAI_API_KEY
+    ? "openai"
+    : process.env.ANTHROPIC_API_KEY
+      ? "anthropic"
+      : process.env.GEMINI_API_KEY
+        ? "gemini"
+        : null;
 
 export const activeModel = () =>
-  activeProvider() === "anthropic" ? MODEL : activeProvider() === "gemini" ? GEMINI_MODEL : null;
+  activeProvider() === "openai"
+    ? OPENAI_MODEL
+    : activeProvider() === "anthropic"
+      ? MODEL
+      : activeProvider() === "gemini"
+        ? GEMINI_MODEL
+        : null;
 
 export const hasApiKey = () => activeProvider() !== null;
 
@@ -27,6 +40,8 @@ Rules:
 - Be honest about uncertainty. If the inputs are insufficient for a confident recommendation, say so and state what additional information would change the answer.
 - Never recommend banned or highly hazardous pesticides. When chemical control is warranted, name the active ingredient class, stress protective equipment, pre-harvest intervals, and advise confirming the product with the extension office.
 - Give quantities in units a farmer can act on (kg per acre, langdo where natural).
+- Distinguish household farms from commercial farms. For household farms, prioritize food security, mixed cropping, low-cost inputs, staggered harvests, and work one family can manage. For commercial farms, include acre-based quantities, labor, market access, gross-margin considerations, and scalable irrigation or disease-control practices.
+- When current web search is available, ground factual claims in authoritative sources such as Bhutan's Ministry of Agriculture and Livestock, NPPC, NSSC, FAO, CABI, CGIAR, or peer-reviewed extension material. Never invent a source URL.
 - Keep every text field concise and plain-spoken - it will be read on a phone by a farmer, possibly translated to Dzongkha.`;
 
 type UserContent = string | Anthropic.ContentBlockParam[];
@@ -36,30 +51,44 @@ export async function askClaude<T>(
   schema: Record<string, unknown>,
   maxTokens = 8000,
 ): Promise<T> {
-  // Provider switch: Claude (enterprise key) preferred; Gemini free tier as fallback.
-  if (activeProvider() === "gemini") {
-    return askGemini<T>(AGRONOMIST_SYSTEM, userContent, schema);
+  const failures: string[] = [];
+
+  if (process.env.OPENAI_API_KEY) {
+    try {
+      return await askOpenAI<T>(AGRONOMIST_SYSTEM, userContent, schema);
+    } catch (error) {
+      failures.push(`OpenAI: ${String(error)}`);
+    }
   }
-  const response = await client().messages.create({
-    model: MODEL,
-    max_tokens: maxTokens,
-    thinking: { type: "adaptive" },
-    system: [
-      {
-        type: "text",
-        text: AGRONOMIST_SYSTEM,
-        cache_control: { type: "ephemeral" },
-      },
-    ],
-    output_config: { format: { type: "json_schema", schema } },
-    messages: [{ role: "user", content: userContent }],
-  });
-  if (response.stop_reason === "refusal") {
-    throw new Error("The model declined this request.");
+
+  if (process.env.ANTHROPIC_API_KEY) {
+    try {
+      const response = await client().messages.create({
+        model: MODEL,
+        max_tokens: maxTokens,
+        thinking: { type: "adaptive" },
+        system: [{ type: "text", text: AGRONOMIST_SYSTEM, cache_control: { type: "ephemeral" } }],
+        output_config: { format: { type: "json_schema", schema } },
+        messages: [{ role: "user", content: userContent }],
+      });
+      if (response.stop_reason === "refusal") throw new Error("The model declined this request.");
+      const text = response.content.find((block) => block.type === "text");
+      if (!text || text.type !== "text") throw new Error("Empty model response.");
+      return JSON.parse(text.text) as T;
+    } catch (error) {
+      failures.push(`Anthropic: ${String(error)}`);
+    }
   }
-  const text = response.content.find((b) => b.type === "text");
-  if (!text || text.type !== "text") throw new Error("Empty model response.");
-  return JSON.parse(text.text) as T;
+
+  if (process.env.GEMINI_API_KEY) {
+    try {
+      return await askGemini<T>(AGRONOMIST_SYSTEM, userContent, schema);
+    } catch (error) {
+      failures.push(`Gemini: ${String(error)}`);
+    }
+  }
+
+  throw new Error(failures.length ? failures.join(" | ") : "No AI provider is configured.");
 }
 
 // ---------------------------------------------------------------- schemas
@@ -81,8 +110,10 @@ export const CROP_REC_SCHEMA = {
           water_needs: { type: "string" },
           key_risks: { type: "array", items: { type: "string" } },
           first_steps: { type: "array", items: { type: "string" } },
+          mixed_cropping: { type: "string", description: "A compatible mixed/intercrop plan, or why monocropping is preferable" },
+          commercial_note: { type: "string", description: "Acre-based scale, labor, market, and risk note; concise for household mode" },
         },
-        required: ["crop", "suitability", "rationale", "planting_window", "water_needs", "key_risks", "first_steps"],
+        required: ["crop", "suitability", "rationale", "planting_window", "water_needs", "key_risks", "first_steps", "mixed_cropping", "commercial_note"],
         additionalProperties: false,
       },
     },
@@ -91,8 +122,16 @@ export const CROP_REC_SCHEMA = {
       items: { type: "string" },
       description: "Missing information that would improve this recommendation",
     },
+    sources: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: { title: { type: "string" }, url: { type: "string" } },
+        required: ["title", "url"], additionalProperties: false,
+      },
+    },
   },
-  required: ["summary", "agro_zone", "recommendations", "data_gaps"],
+  required: ["summary", "agro_zone", "recommendations", "data_gaps", "sources"],
   additionalProperties: false,
 } as const;
 
@@ -130,11 +169,19 @@ export const DISEASE_SCHEMA = {
       description: "True if the farmer should take a sample to NPPC/extension office",
     },
     referral_reason: { type: "string" },
+    sources: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: { title: { type: "string" }, url: { type: "string" } },
+        required: ["title", "url"], additionalProperties: false,
+      },
+    },
   },
   required: [
     "is_plant_image", "image_quality_ok", "quality_advice", "crop_identified", "diagnoses",
     "immediate_actions", "organic_treatment", "chemical_treatment", "prevention",
-    "refer_to_expert", "referral_reason",
+    "refer_to_expert", "referral_reason", "sources",
   ],
   additionalProperties: false,
 } as const;
@@ -172,8 +219,16 @@ export const SOIL_SCHEMA = {
       },
     },
     retest_advice: { type: "string" },
+    sources: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: { title: { type: "string" }, url: { type: "string" } },
+        required: ["title", "url"], additionalProperties: false,
+      },
+    },
   },
-  required: ["health_rating", "summary", "findings", "amendments", "retest_advice"],
+  required: ["health_rating", "summary", "findings", "amendments", "retest_advice", "sources"],
   additionalProperties: false,
 } as const;
 
