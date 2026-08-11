@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { askClaude, hasApiKey, SOIL_SCHEMA, iotReadings } from "@/lib/claude";
+import { hasApiKey, iotReadings } from "@/lib/claude";
+import { assessSoil } from "@/lib/agriculture/advisory";
 
 export const maxDuration = 300;
 
@@ -15,13 +16,8 @@ export async function POST(req: NextRequest) {
     payload.sensor_reading = iotReadings.get(device);
     payload.data_source = "iot_sensor";
   }
-  const prompt =
-    "Assess this soil for a farm in Bhutan and produce a practical amendment plan. " +
-    "Judge nutrient levels against the needs of the target crop if given, otherwise " +
-    "against general horticultural standards for the stated region/elevation.\n\n" +
-    `Soil data:\n${JSON.stringify(payload, null, 2)}`;
   try {
-    return NextResponse.json(await askClaude(prompt, SOIL_SCHEMA));
+    return NextResponse.json(await assessSoil(payload));
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 502 });
   }

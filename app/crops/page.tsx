@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ArrowRight, CalendarDays, Droplets, Lightbulb, Scale, Sprout, TriangleAlert } from "lucide-react";
 import { Bullets, ErrorBox, FarmModeSwitch, Field, Kicker, Loading, Notice, PageIntro, Pill, Sources, postJson, type FarmMode, type Source } from "@/components/ui";
+import { LocationElevation } from "@/components/LocationElevation";
 
 type Recommendation = {
   crop: string; suitability: "excellent" | "good" | "moderate" | "marginal"; rationale: string;
@@ -40,11 +41,10 @@ export default function CropsPage() {
       <div className="form-section-head"><span>1</span><div><h2>Farm location & land</h2><p>Elevation is especially important in Bhutan.</p></div></div>
       <div className="form-grid">
         <Field label="Dzongkhag"><select value={form.location} onChange={set("location")} required><option value="">Select dzongkhag</option>{DZONGKHAGS.map((x) => <option key={x}>{x}</option>)}</select></Field>
-        <Field label="Gewog or village"><input value={form.gewog} onChange={set("gewog")} placeholder="e.g. Kikhorthang" /></Field>
-        <Field label="Elevation" hint="Metres above sea level"><div className="input-unit"><input inputMode="numeric" type="number" min="100" max="5000" value={form.elevation} onChange={set("elevation")} placeholder="1400" /><span>m</span></div></Field>
-        <Field label="Land area" hint={mode === "commercial" ? "Required for acre-based planning" : "Optional for household farms"}><div className="input-unit"><input inputMode="decimal" type="number" min="0.01" step="0.01" value={form.area} onChange={set("area")} placeholder="1.5" required={mode === "commercial"} /><span>acres</span></div></Field>
+        <LocationElevation place={form.gewog} elevation={form.elevation} onPlace={(gewog) => setForm((old) => ({ ...old, gewog }))} onElevation={(elevation) => setForm((old) => ({ ...old, elevation }))} />
+        {mode === "commercial" && <Field label="Land area" hint="Required for acre-based planning"><div className="input-unit"><input aria-label="Land area" inputMode="decimal" type="number" min="0.01" step="0.01" value={form.area} onChange={set("area")} placeholder="1.5" required /><span>acres</span></div></Field>}
         <Field label="Water available"><select value={form.irrigation} onChange={set("irrigation")}><option value="">Not sure</option><option>Rain-fed only</option><option>Seasonal stream or channel</option><option>Reliable year-round channel</option><option>Sprinkler irrigation</option><option>Drip irrigation</option></select></Field>
-        <Field label="Slope or terrain"><select value={form.terrain} onChange={set("terrain")}><option value="">Not sure</option><option>Flat valley floor</option><option>Gentle terraced slope</option><option>Steep terraced slope</option></select></Field>
+        {mode === "commercial" && <Field label="Slope or terrain"><select aria-label="Slope or terrain" value={form.terrain} onChange={set("terrain")}><option value="">Not sure</option><option>Flat valley floor</option><option>Gentle terraced slope</option><option>Steep terraced slope</option></select></Field>}
         <Field label="Soil pH" hint="Leave blank if not tested"><input inputMode="decimal" type="number" min="3" max="10" step="0.1" value={form.ph} onChange={set("ph")} placeholder="6.2" /></Field>
         <Field label="Main goal"><select value={form.goal} onChange={set("goal")}><option value="">Choose a goal</option>{mode === "household" ? <><option>Family food and nutrition</option><option>Food plus small cash income</option><option>Reduce food purchases</option></> : <><option>Highest sustainable profit</option><option>Stable year-round cash flow</option><option>Supply a buyer or cooperative</option><option>Export-quality production</option></>}</select></Field>
       </div>

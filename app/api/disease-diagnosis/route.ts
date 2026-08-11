@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import type Anthropic from "@anthropic-ai/sdk";
-import { askClaude, hasApiKey, DISEASE_SCHEMA } from "@/lib/claude";
+import { hasApiKey } from "@/lib/claude";
+import { diagnosePlant } from "@/lib/agriculture/advisory";
 
 export const maxDuration = 300;
 
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
     },
   ];
   try {
-    return NextResponse.json(await askClaude(content, DISEASE_SCHEMA));
+    return NextResponse.json(await diagnosePlant(content, crop, notes));
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 502 });
   }

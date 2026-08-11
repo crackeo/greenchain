@@ -24,6 +24,8 @@
 @media (min-width:1240px){.shell{grid-template-columns:280px minmax(0,1fr)}.content{padding-left:56px;padding-right:56px}.form-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.compact{grid-template-columns:repeat(2,minmax(0,1fr))}.fact-grid{grid-template-columns:repeat(4,1fr)}.fact-grid>div{border-bottom:0;border-right:1px solid var(--line);padding-right:12px}.fact-grid>div:last-child{border-right:0}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.module-card:hover{transform:none}}
 
+.elevation-control{display:grid;grid-template-columns:1fr auto;gap:8px}.btn-small{min-height:44px;padding:0 13px}.field-status{display:block;margin-top:6px;color:var(--muted)}.photo-choice-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.photo-choice-row .btn{justify-content:center}
+
 /* ---------- official GreenChain brand asset ---------- */
 .brand-logo-crop{display:block;width:46px;height:46px;flex:0 0 46px;background:#fff url('/greenchain.png') center 39%/275px auto no-repeat;border-radius:12px}.brand-name,.brand-sub{display:block}.brand-name{font-family:var(--font-display),serif;font-size:1.2rem;line-height:1}.brand-name span{color:var(--growth);font-style:italic}.brand-sub{font-size:.63rem;color:rgba(255,255,255,.58);margin-top:5px}
 .story-link{margin-top:14px;display:inline-flex;align-items:center;gap:7px;color:var(--leaf);font-size:.85rem;font-weight:800}

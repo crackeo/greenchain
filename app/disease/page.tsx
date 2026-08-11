@@ -8,7 +8,7 @@ type Diagnosis = { condition: string; confidence: "high" | "medium" | "low"; sym
 type DiseaseResult = { is_plant_image: boolean; image_quality_ok: boolean; quality_advice: string; crop_identified: string; diagnoses: Diagnosis[]; immediate_actions: string[]; organic_treatment: string[]; chemical_treatment: string[]; prevention: string[]; refer_to_expert: boolean; referral_reason: string; sources: Source[] };
 
 export default function DiseasePage() {
-  const input = useRef<HTMLInputElement>(null); const [file, setFile] = useState<File | null>(null); const [preview, setPreview] = useState("");
+  const cameraInput = useRef<HTMLInputElement>(null); const libraryInput = useRef<HTMLInputElement>(null); const [file, setFile] = useState<File | null>(null); const [preview, setPreview] = useState("");
   const [dragging, setDragging] = useState(false); const [crop, setCrop] = useState(""); const [notes, setNotes] = useState(""); const [loading, setLoading] = useState(false); const [error, setError] = useState(""); const [result, setResult] = useState<DiseaseResult | null>(null);
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
   function choose(next?: File | null) { if (!next) return; if (!next.type.startsWith("image/")) { setError("Please choose a JPG, PNG, HEIC, or WebP plant photo."); return; } if (preview) URL.revokeObjectURL(preview); setFile(next); setPreview(URL.createObjectURL(next)); setError(""); setResult(null); }
@@ -20,10 +20,12 @@ export default function DiseasePage() {
     <PageIntro eyebrow="Plant doctor" title={<>Check what is <em>hurting your plant</em></>} description="Upload one clear photo of the affected leaf, fruit, stem, or whole plant. The result includes confidence, immediate action, and when to call an expert." />
     <div className="photo-tips"><span><Camera /> Use daylight</span><span><ScanLine /> Fill the frame</span><span><CheckCircle2 /> One plant per photo</span></div>
     <form className="card form-card" onSubmit={submit}>
-      <button type="button" className={`dropzone${dragging ? " dragging" : ""}${preview ? " with-preview" : ""}`} onClick={() => input.current?.click()} onDragOver={(e) => { e.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={drop} aria-label={preview ? "Change selected plant photo" : "Choose a plant photo"}>
+      <div className={`dropzone${dragging ? " dragging" : ""}${preview ? " with-preview" : ""}`} onDragOver={(e) => { e.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={drop}>
         {preview ? <><img src={preview} alt="Selected plant to diagnose" /><span className="change-photo"><ImagePlus /> Change photo</span></> : <><span className="upload-icon"><Upload /></span><b>Tap to take or choose a photo</b><small>JPG, PNG, HEIC or WebP · up to 8 MB</small></>}
-      </button>
-      <input ref={input} className="sr-only" type="file" accept="image/*" capture="environment" onChange={(e) => choose(e.target.files?.[0])} />
+      </div>
+      <div className="photo-choice-row"><button type="button" className="btn" onClick={() => cameraInput.current?.click()}><Camera size={18} /> Take photo</button><button type="button" className="btn secondary" onClick={() => libraryInput.current?.click()}><ImagePlus size={18} /> Choose photo</button></div>
+      <input ref={cameraInput} className="sr-only" type="file" accept="image/*" capture="environment" onChange={(e) => choose(e.target.files?.[0])} />
+      <input ref={libraryInput} className="sr-only" type="file" accept="image/*" onChange={(e) => choose(e.target.files?.[0])} />
       <div className="form-grid compact"><Field label="Crop name" hint="Optional—AI will also inspect the image"><input value={crop} onChange={(e) => setCrop(e.target.value)} placeholder="e.g. mandarin, cardamom, apple" /></Field><Field label="What did you notice?" hint="When it started and whether it is spreading"><input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Yellow spots spreading for 2 weeks" /></Field></div>
       <div className="form-actions"><button className="btn" disabled={!file || loading}><ScanLine size={18} />{loading ? "Examining photo…" : "Check plant health"}</button>{file && <button className="btn ghost" type="button" onClick={reset}><RotateCcw size={18} /> Start over</button>}</div>
     </form>

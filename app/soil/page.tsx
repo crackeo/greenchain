@@ -3,16 +3,17 @@
 import { useEffect, useState } from "react";
 import { ArrowRight, CalendarClock, FlaskConical, Leaf, Scale, TestTube2 } from "lucide-react";
 import { ErrorBox, FarmModeSwitch, Field, Kicker, Loading, Notice, PageIntro, Pill, Sources, postJson, type FarmMode, type Source } from "@/components/ui";
+import { LocationElevation } from "@/components/LocationElevation";
 
 type SoilResponse = { health_rating: "good" | "fair" | "poor"; summary: string; findings: { parameter: string; status: "low" | "adequate" | "high" | "unknown"; note: string }[]; amendments: { action: string; quantity: string; timing: string; type: "organic" | "mineral" | "practice" }[]; retest_advice: string; sources: Source[] };
 
 export default function SoilPage() {
   const [mode, setMode] = useState<FarmMode>("household"); const [devices, setDevices] = useState<string[]>([]);
-  const [form, setForm] = useState({ device: "", crop: "", location: "", area: "", ph: "", n: "", p: "", k: "", om: "", texture: "", drainage: "", notes: "" });
+  const [form, setForm] = useState({ device: "", crop: "", location: "", elevation: "", ph: "", n: "", p: "", k: "", om: "", texture: "", drainage: "", notes: "" });
   const [loading, setLoading] = useState(false); const [error, setError] = useState(""); const [result, setResult] = useState<SoilResponse | null>(null);
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setForm((old) => ({ ...old, [key]: e.target.value }));
   useEffect(() => { fetch("/api/status").then((r) => r.ok ? r.json() : null).then((data) => Array.isArray(data?.iot_devices) && setDevices(data.iot_devices)).catch(() => undefined); }, []);
-  async function submit(e: React.FormEvent) { e.preventDefault(); setLoading(true); setError(""); setResult(null); try { setResult(await postJson<SoilResponse>("/api/soil-health", { farmer_type: mode, target_crop: form.crop, location_and_elevation: form.location, land_area_acres: form.area ? Number(form.area) : null, ph: form.ph ? Number(form.ph) : null, nitrogen_kg_ha: form.n ? Number(form.n) : null, phosphorus_kg_ha: form.p ? Number(form.p) : null, potassium_kg_ha: form.k ? Number(form.k) : null, organic_matter_pct: form.om ? Number(form.om) : null, texture: form.texture, drainage: form.drainage, notes: form.notes, data_source: form.device ? "iot_sensor" : "manual_entry", iot_device: form.device })); } catch (err) { setError(err instanceof Error ? err.message : "Could not assess this soil."); } finally { setLoading(false); } }
+  async function submit(e: React.FormEvent) { e.preventDefault(); setLoading(true); setError(""); setResult(null); try { setResult(await postJson<SoilResponse>("/api/soil-health", { farmer_type: mode, target_crop: form.crop, location: form.location, elevation_m: Number(form.elevation), ph: form.ph ? Number(form.ph) : null, nitrogen_kg_ha: form.n ? Number(form.n) : null, phosphorus_kg_ha: form.p ? Number(form.p) : null, potassium_kg_ha: form.k ? Number(form.k) : null, organic_matter_pct: form.om ? Number(form.om) : null, texture: form.texture, drainage: form.drainage, notes: form.notes, data_source: form.device ? "iot_sensor" : "manual_entry", iot_device: form.device })); } catch (err) { setError(err instanceof Error ? err.message : "Could not assess this soil."); } finally { setLoading(false); } }
 
   return <>
     <PageIntro eyebrow="Soil health" title={<>Turn soil numbers into a <em>clear action plan</em></>} description="Enter only the values you have from an NSSC report, soil health card, or connected sensor. We explain what each result means and what to do per acre." />
@@ -22,8 +23,7 @@ export default function SoilPage() {
       <div className="form-grid">
         {devices.length > 0 && <Field label="Connected sensor"><select value={form.device} onChange={set("device")}><option value="">Manual soil report</option>{devices.map((id) => <option key={id}>{id}</option>)}</select></Field>}
         <Field label="Target crop"><input value={form.crop} onChange={set("crop")} placeholder="e.g. large cardamom" /></Field>
-        <Field label="Place and elevation"><input value={form.location} onChange={set("location")} placeholder="e.g. Tsirang, 1,400 m" /></Field>
-        <Field label="Land area"><div className="input-unit"><input inputMode="decimal" type="number" step="0.01" min="0.01" value={form.area} onChange={set("area")} placeholder="1.5" /><span>acres</span></div></Field>
+        <LocationElevation place={form.location} elevation={form.elevation} onPlace={(location) => setForm((old) => ({ ...old, location }))} onElevation={(elevation) => setForm((old) => ({ ...old, elevation }))} />
         <Field label="Soil texture"><select value={form.texture} onChange={set("texture")}><option value="">Not sure</option><option>Sandy</option><option>Loamy</option><option>Clayey</option><option>Silty</option></select></Field>
         <Field label="Drainage"><select value={form.drainage} onChange={set("drainage")}><option value="">Not sure</option><option>Drains quickly</option><option>Moist but not waterlogged</option><option>Water stands after rain</option></select></Field>
       </div>
